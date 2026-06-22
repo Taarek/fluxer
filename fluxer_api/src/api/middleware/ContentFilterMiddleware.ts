@@ -81,7 +81,7 @@ const SKIP_CONTENT_FILTER_PATH_PARTS = [
 	'/auth/',
 	'/oauth2/',
 	'/reports/dsa/email/',
-	'/users/@me/authorized-ips/',
+	'/users/@me/authorized-ips',
 	'/users/@me/email-change/',
 	'/users/@me/mfa/',
 	'/users/@me/password-change/',
