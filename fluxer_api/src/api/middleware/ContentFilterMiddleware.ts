@@ -72,6 +72,7 @@ const SKIP_FIELD_SUFFIXES = [
 ] as const;
 const SKIP_CONTENT_FILTER_PATH_PARTS = [
 	'/admin/audit-logs/search',
+	'/admin/bans/phrase',
 	'/admin/guilds/search',
 	'/admin/messages/search',
 	'/admin/reports/search',
