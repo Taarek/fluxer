@@ -112,6 +112,8 @@ export const DEFAULT_APP_PUBLIC_CONFIG: InstanceAppPublic = {
 		wordmark_url: null,
 		favicon_url: null,
 		theme_color: null,
+		status_page_url: null,
+		status_page_incident_history_url: null,
 	},
 	setup: {
 		configured: false,
@@ -539,6 +541,14 @@ class RuntimeConfig {
 		} catch {
 			return this.apiEndpoint.replace(/\/api$/, '');
 		}
+	}
+
+	get statusPageUrl(): string {
+		return this.appPublic.branding.status_page_url ?? '';
+	}
+
+	get statusPageIncidentHistoryUrl(): string {
+		return this.appPublic.branding.status_page_incident_history_url ?? '';
 	}
 
 	isSelfHosted(): boolean {
