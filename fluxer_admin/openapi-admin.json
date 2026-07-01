@@ -12507,7 +12507,9 @@
 									"logo_url": {"nullable": true, "type": "string"},
 									"wordmark_url": {"nullable": true, "type": "string"},
 									"favicon_url": {"nullable": true, "type": "string"},
-									"theme_color": {"nullable": true, "type": "string"}
+									"theme_color": {"nullable": true, "type": "string"},
+									"status_page_url": {"nullable": true, "type": "string"},
+									"status_page_incident_history_url": {"nullable": true, "type": "string"}
 								},
 								"required": [
 									"product_name",
@@ -12516,7 +12518,9 @@
 									"logo_url",
 									"wordmark_url",
 									"favicon_url",
-									"theme_color"
+									"theme_color",
+									"status_page_url",
+									"status_page_incident_history_url"
 								]
 							},
 							"setup": {
@@ -12952,7 +12956,9 @@
 									"logo_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"wordmark_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"favicon_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"theme_color": {"nullable": true, "type": "string", "maxLength": 64}
+									"theme_color": {"nullable": true, "type": "string", "maxLength": 64},
+									"status_page_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"status_page_incident_history_url": {"nullable": true, "type": "string", "maxLength": 2048}
 								}
 							},
 							"setup": {"nullable": true, "type": "object", "properties": {"configured": {"type": "boolean"}}},
