@@ -261,13 +261,7 @@ export interface MasterConfig {
 			port: number;
 			fail_open: boolean;
 		};
-		gif: {
-			provider: 'tenor' | 'klipy';
-		};
 		klipy: {
-			api_key: string;
-		};
-		tenor: {
 			api_key: string;
 		};
 		youtube: {
@@ -324,6 +318,7 @@ export interface MasterConfig {
 		self_hosted: boolean;
 		auto_join_invite_code?: string;
 		visionaries_guild_id?: string;
+		visionaries_guild_visionary_role_id?: string;
 		branding: InstanceBrandingConfig;
 		setup: {
 			configured: boolean;
