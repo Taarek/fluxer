@@ -2,7 +2,6 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
@@ -91,6 +90,7 @@ const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
 const STATUS_PAGE_FETCH_OPTIONS: RequestInit = {cache: 'no-store'};
+const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
 
 export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
 	if (scheduledMaintenance?.status === 'in_progress') {
@@ -256,7 +256,7 @@ export class StatusPage {
 
 	private async fetchIncidents(): Promise<void> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/summary.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/summary.json`, STATUS_PAGE_FETCH_OPTIONS);
 			if (!response.ok) {
 				runInAction(() => {
 					this.incident = null;
@@ -305,7 +305,7 @@ export class StatusPage {
 
 	private async fetchComponentMaintenances(): Promise<Array<InstatusMaintenance>> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/components.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/components.json`, STATUS_PAGE_FETCH_OPTIONS);
 			if (!response.ok) {
 				return [];
 			}
