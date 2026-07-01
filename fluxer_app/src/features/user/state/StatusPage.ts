@@ -208,7 +208,7 @@ export class StatusPage {
 	}
 
 	startPolling(): void {
-		if (this.isSelfHosted || this.pollingStarted) {
+		if (this.isSelfHosted || this.pollingStarted || !STATUS_PAGE_URL) {
 			return;
 		}
 
@@ -239,7 +239,7 @@ export class StatusPage {
 	}
 
 	async checkIncidents(): Promise<void> {
-		if (this.isSelfHosted) {
+		if (this.isSelfHosted || !STATUS_PAGE_URL) {
 			return;
 		}
 		if (this.checkInFlight) {
