@@ -126,7 +126,7 @@ export function useConnectionNotice(): ConnectionNotice | null {
 	return {
 		tone: ConnectionNoticeTone.NEUTRAL,
 		message: i18n._(CONNECTION_ISSUES_DESCRIPTOR),
-		action: {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: STATUS_PAGE_URL},
+		action: STATUS_PAGE_URL ? {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: STATUS_PAGE_URL} : null,
 		showSwitchAccount,
 	};
 }
