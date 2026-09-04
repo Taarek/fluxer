@@ -89,8 +89,12 @@ const POLL_ACTIVE_MAINTENANCE_JITTER_MS = 15 * 1000;
 const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
-const STATUS_PAGE_FETCH_OPTIONS: RequestInit = {cache: 'no-store'};
+const STATUS_PAGE_FETCH_TIMEOUT_MS = 10 * 1000;
 const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
+
+function statusPageFetchOptions(): RequestInit {
+	return {cache: 'no-store', signal: AbortSignal.timeout(STATUS_PAGE_FETCH_TIMEOUT_MS)};
+}
 
 export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
 	if (scheduledMaintenance?.status === 'in_progress') {
@@ -255,12 +259,8 @@ export class StatusPage {
 
 	private async fetchIncidents(): Promise<void> {
 		try {
-			const response = await fetch(`${STATUS_PAGE_URL}/summary.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/summary.json`, statusPageFetchOptions());
 			if (!response.ok) {
-				runInAction(() => {
-					this.incident = null;
-					this.scheduledMaintenance = null;
-				});
 				return;
 			}
 			const data: InstatusSummary = await response.json();
@@ -295,16 +295,12 @@ export class StatusPage {
 			});
 		} catch {
 			logger.warn('Failed to fetch status page');
-			runInAction(() => {
-				this.incident = null;
-				this.scheduledMaintenance = null;
-			});
 		}
 	}
 
 	private async fetchComponentMaintenances(): Promise<Array<InstatusMaintenance>> {
 		try {
-			const response = await fetch(`${STATUS_PAGE_URL}/components.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/components.json`, statusPageFetchOptions());
 			if (!response.ok) {
 				return [];
 			}
@@ -318,6 +314,10 @@ export class StatusPage {
 
 	clearIncident(): void {
 		this.incident = null;
+	}
+
+	refreshForConnectionIssue(): void {
+		this.refreshIfStale();
 	}
 
 	private async refreshAndReschedule(): Promise<void> {

@@ -44,6 +44,7 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareStateSync';
 import {VoiceEngineV2AppScreenShareTrackPlumbing} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareTrackPlumbing';
 import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
+import {ensureNativeMicrophonePermissionForDeviceShare} from '@app/features/voice/engine/voice_screen_share_manager/NativePermissionGate';
 import {
 	captureScreenSharePublicationCleanup,
 	type DeviceScreenShareCaptureOptions,
@@ -74,6 +75,7 @@ import {
 	captureNativeAudioTrackForLinuxRouting,
 	commitNativeAudioBridgeReplacement,
 	disarmNativeAudio,
+	reconfigureLinuxNativeAudioRouting,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {SCREEN_SHARE_DEGRADATION_PREFERENCE} from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
@@ -82,6 +84,7 @@ import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
 import {msg} from '@lingui/core/macro';
 import {
+	createLocalAudioTrack,
 	type LocalAudioTrack,
 	type LocalParticipant,
 	type LocalTrackPublication,
@@ -750,6 +753,14 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		const participant = room?.localParticipant;
 		if (!participant || !participant.isScreenShareEnabled) return false;
 		if (!linuxRule) return false;
+		if (options.replaceExisting !== true) {
+			const reconfigured = await reconfigureLinuxNativeAudioRouting(linuxRule, options);
+			if (reconfigured !== 'unsupported') {
+				this.syncLocalScreenShareAudioStateInternal(participant, true);
+				this.syncPersistedScreenShareAudioPreferenceInternal(participant);
+				return true;
+			}
+		}
 		const capturedTrack = await captureNativeAudioTrackForLinuxRouting(linuxRule, options);
 		if (!capturedTrack) return false;
 		let adopted = false;
@@ -766,6 +777,43 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				} catch (stopError) {
 					logger.warn('Failed to stop rejected Linux native screen-share audio track', {error: stopError});
 				}
+			}
+			return false;
+		}
+		this.syncLocalScreenShareAudioStateInternal(participant, true);
+		this.syncPersistedScreenShareAudioPreferenceInternal(participant);
+		return true;
+	}
+
+	getActiveScreenShareVideoDeviceId(room: Room | null): string {
+		const publication = room?.localParticipant?.getTrackPublication(Track.Source.ScreenShare);
+		return publication?.videoTrack?.mediaStreamTrack.getSettings().deviceId ?? '';
+	}
+
+	async ensureDeviceScreenShareMicPublication(room: Room | null, audioDeviceId: string): Promise<boolean> {
+		const participant = room?.localParticipant;
+		if (!participant || !participant.isScreenShareEnabled) return false;
+		await ensureNativeMicrophonePermissionForDeviceShare('replace');
+		const micTrack = await createLocalAudioTrack({
+			deviceId: audioDeviceId && audioDeviceId !== 'default' ? audioDeviceId : undefined,
+			echoCancellation: false,
+			noiseSuppression: false,
+			autoGainControl: false,
+			voiceIsolation: false,
+			channelCount: 2,
+			sampleRate: 48000,
+		});
+		let adopted = false;
+		try {
+			adopted = await this.replaceActiveScreenShareAudioTrackInternal(participant, micTrack.mediaStreamTrack);
+		} catch (error) {
+			logger.warn('Failed to publish the device screen-share microphone track', {error});
+		}
+		if (!adopted) {
+			try {
+				await micTrack.stop();
+			} catch (stopError) {
+				logger.warn('Failed to stop the rejected device screen-share microphone track', {error: stopError});
 			}
 			return false;
 		}
